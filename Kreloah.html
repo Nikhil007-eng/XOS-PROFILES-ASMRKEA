@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>XOS1 | asmrkea</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg: #000000;
+            --accent: #007aff;
+            --card: #0a0a0a;
+            --border: #1a1a1a;
+            --glass: rgba(10, 10, 10, 0.7);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: white;
+            font-family: 'Space Grotesk', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100dvh;
+            overflow-x: hidden;
+        }
+
+        /* Top Bar Branding */
+        .top-nav {
+            width: 100%;
+            max-width: 450px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 20px;
+            position: fixed;
+            top: 0;
+            z-index: 100;
+            background: linear-gradient(to bottom, var(--bg) 60%, transparent);
+        }
+
+        .branding-group { display: flex; flex-direction: column; gap: 2px; }
+        .xos-logo { font-size: 8px; letter-spacing: 4px; font-weight: 700; color: var(--accent); text-transform: uppercase; }
+        .verified-text { font-size: 8px; letter-spacing: 2px; text-transform: uppercase; color: #ffffff; opacity: 0.9; }
+
+        .share-btn {
+            width: 32px; height: 32px; border: 1px solid var(--border); border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            background: var(--card); cursor: pointer; transition: all 0.2s ease;
+        }
+
+        /* Main Container */
+        .main-wrapper {
+            width: 90%; max-width: 400px; padding-top: 100px; padding-bottom: 50px;
+            opacity: 0; transform: translateY(20px);
+            animation: slideUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        }
+        @keyframes slideUp { to { opacity: 1; transform: translateY(0); } }
+
+        /* Profile Header */
+        .profile-card {
+            background: var(--glass); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+            border: 1px solid var(--border); border-radius: 32px; padding: 40px 20px;
+            text-align: center; margin-bottom: 20px;
+        }
+
+        .pfp-trigger {
+            width: 90px; height: 90px; border-radius: 50%; border: 1px solid var(--border);
+            margin: 0 auto 15px; object-fit: cover; cursor: pointer; transition: transform 0.3s ease;
+        }
+        .pfp-trigger:active { transform: scale(0.92); }
+        .email-caption { font-size: 10px; color: #666; margin-top: 4px; font-weight: 300; }
+
+        /* Floating Window (Modal) */
+        #photo-modal {
+            position: fixed; inset: 0; 
+            /* Lighter, cool-tinted glassy background overlay */
+            background: rgba(255, 255, 255, 0.05); /* Light frosted white tint */
+            /* Reduced blur and removed saturation for softer, more translucent effect */
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 200; display: none; align-items: center; justify-content: center;
+            opacity: 0; transition: opacity 0.4s ease;
+        }
+        #photo-modal.active { display: flex; opacity: 1; }
+
+        .modal-frame {
+            position: relative; /* Boundary for the close button */
+            width: 85vw; height: 85vw; max-width: 360px; max-height: 360px;
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: 28px; /* Non-edgy square */
+            overflow: hidden; 
+            transform: scale(0.85); transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.5);
+        }
+        #photo-modal.active .modal-frame { transform: scale(1); }
+
+        .modal-frame img { width: 100%; height: 100%; object-fit: cover; }
+
+        /* Close Button INSIDE boundary */
+        .close-glass {
+            position: absolute; top: 15px; right: 15px; width: 34px; height: 34px;
+            background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            border-radius: 10px; z-index: 10;
+            display: flex; align-items: center; justify-content: center;
+            color: white; cursor: pointer; transition: all 0.2s ease;
+        }
+        .close-glass:active { transform: scale(0.9); background: rgba(255, 255, 255, 0.1); }
+
+        /* Utility Grid */
+        .links-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .link-item {
+            background: var(--card); border: 1px solid var(--border); border-radius: 20px;
+            padding: 16px; display: flex; flex-direction: column; gap: 12px;
+            text-decoration: none; color: white; transition: all 0.3s ease;
+        }
+        .link-item:active { transform: scale(0.94); border-color: var(--accent); }
+
+        .visual-box {
+            width: 44px; height: 44px; border-radius: 10px; background: #111;
+            overflow: hidden; display: flex; align-items: center; justify-content: center;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        .visual-box img { width: 100%; height: 100%; object-fit: cover; }
+        .visual-box i { font-size: 1.2rem; color: var(--accent); }
+
+        .text-group { display: flex; flex-direction: column; }
+        .title { font-size: 0.85rem; font-weight: 700; color: #fff; }
+        .caption { font-size: 0.65rem; color: #555; font-weight: 400; margin-top: 2px; line-height: 1.2; }
+
+        .full { grid-column: span 2; }
+
+        .footer-container {
+            width: 100%; margin-top: 50px; display: flex; justify-content: center;
+            align-items: center; gap: 8px; opacity: 0.4;
+        }
+        .system-text { font-size: 8px; letter-spacing: 4px; text-transform: uppercase; color: #444; }
+        .dev-link {
+            font-size: 8px; letter-spacing: 2px; text-transform: uppercase;
+            color: var(--accent); text-decoration: none; border: 1px solid transparent;
+            padding: 2px 6px; border-radius: 4px; transition: all 0.3s ease;
+        }
+        .dev-link:hover { border-color: var(--accent); }
+    </style>
+</head>
+<body>
+
+    <div id="photo-modal" onclick="closePFP()">
+        <div class="modal-frame" onclick="event.stopPropagation()">
+            <div class="close-glass" onclick="closePFP()">
+                <i class="fa-solid fa-xmark text-xs"></i>
+            </div>
+            <img src="https://via.placeholder.com/600" alt="Full Profile View">
+        </div>
+    </div>
+
+    <nav class="top-nav">
+        <div class="branding-group">
+            <div class="xos-logo">XOS // ASMRKEA</div>
+            <div class="verified-text">Verified Creator</div>
+        </div>
+        <div class="share-btn" onclick="triggerNativeShare()">
+            <i class="fa-solid fa-arrow-up-from-bracket text-[10px]"></i>
+        </div>
+    </nav>
+
+    <div class="main-wrapper">
+        <header class="profile-card">
+            <img src="https://via.placeholder.com/150" alt="asmrkea" class="pfp-trigger" onclick="openPFP('https://via.placeholder.com/600')">
+            <h1 class="text-2xl font-bold">asmrkea</h1>
+            <p class="text-[11px] text-[#444] mt-2">asmrkeabusiness@gmail.com</p>
+            <p class="email-caption">Business inquiries & collaboration</p>
+        </header>
+
+        <div class="links-grid">
+            <a href="https://spotify.com" target="_blank" class="link-item">
+                <div class="visual-box"><img src="https://via.placeholder.com/100" alt="S"></div>
+                <div class="text-group"><span class="title">Spotify</span><span class="caption">Longer audio vids.</span></div>
+            </a>
+            <a href="https://youtube.com" target="_blank" class="link-item">
+                <div class="visual-box"><i class="fa-brands fa-youtube"></i></div>
+                <div class="text-group"><span class="title">YouTube</span><span class="caption">Main stream.</span></div>
+            </a>
+            <a href="https://youtube.com" target="_blank" class="link-item">
+                <div class="visual-box"><img src="https://via.placeholder.com/100" alt="N"></div>
+                <div class="text-group"><span class="title">New YT</span><span class="caption">Coming soon.</span></div>
+            </a>
+            <a href="https://instagram.com" target="_blank" class="link-item">
+                <div class="visual-box"><i class="fa-brands fa-instagram"></i></div>
+                <div class="text-group"><span class="title">Instagram</span><span class="caption">Daily stories.</span></div>
+            </a>
+            <a href="https://tiktok.com" target="_blank" class="link-item">
+                <div class="visual-box"><i class="fa-brands fa-tiktok"></i></div>
+                <div class="text-group"><span class="title">TikTok</span><span class="caption">Short triggers.</span></div>
+            </a>
+            <a href="https://facebook.com" target="_blank" class="link-item">
+                <div class="visual-box"><img src="https://via.placeholder.com/100" alt="F"></div>
+                <div class="text-group"><span class="title">Facebook</span><span class="caption">Community page.</span></div>
+            </a>
+            <a href="https://discord.com" target="_blank" class="link-item">
+                <div class="visual-box"><i class="fa-brands fa-discord"></i></div>
+                <div class="text-group"><span class="title">Discord</span><span class="caption">Join the server.</span></div>
+            </a>
+            <a href="https://x.com" target="_blank" class="link-item">
+                <div class="visual-box"><i class="fa-brands fa-x-twitter"></i></div>
+                <div class="text-group"><span class="title">X / Twitter</span><span class="caption">Quick updates.</span></div>
+            </a>
+            <a href="https://cash.app" target="_blank" class="link-item full">
+                <div class="visual-box"><i class="fa-solid fa-dollar-sign"></i></div>
+                <div class="text-group"><span class="title">CashApp</span><span class="caption">Thank you for all the support!</span></div>
+            </a>
+            <a href="https://amazon.com" target="_blank" class="link-item full">
+                <div class="visual-box"><i class="fa-brands fa-amazon"></i></div>
+                <div class="text-group"><span class="title">Amazon Wishlist</span><span class="caption">Equipment & prop list.</span></div>
+            </a>
+            <a href="#" target="_blank" class="link-item full">
+                <div class="visual-box"><img src="https://via.placeholder.com/100" alt="C"></div>
+                <div class="text-group"><span class="title">Comfort Items</span><span class="caption">My curated essentials collection.</span></div>
+            </a>
+        </div>
+
+        <div class="footer-container">
+            <span class="system-text">XOS SYSTEM DEPLOYMENT // 2026</span>
+            <a href="https://nikhil007-eng.github.io/xos-social-Id/?utm_source=ig&utm_medium=social&utm_content=link_in_bio" class="dev-link">DEVELOPER</a>
+        </div>
+    </div>
+
+    <script>
+        function openPFP(src) {
+            const modal = document.getElementById('photo-modal');
+            modal.style.display = 'flex';
+            setTimeout(() => modal.classList.add('active'), 10);
+            history.pushState({ modalOpen: true }, "");
+        }
+
+        function closePFP() {
+            const modal = document.getElementById('photo-modal');
+            if (modal.classList.contains('active')) {
+                modal.classList.remove('active');
+                setTimeout(() => modal.style.display = 'none', 400);
+                if (history.state && history.state.modalOpen) {
+                    history.back();
+                }
+            }
+        }
+
+        window.onpopstate = function() {
+            const modal = document.getElementById('photo-modal');
+            if (modal.classList.contains('active')) {
+                modal.classList.remove('active');
+                setTimeout(() => modal.style.display = 'none', 400);
+            }
+        };
+
+        async function triggerNativeShare() {
+            if (navigator.share) {
+                try {
+                    await navigator.share({ title: 'asmrkea | XOS', url: window.location.href });
+                } catch (err) {}
+            }
+        }
+    </script>
+</body>
+</html>
